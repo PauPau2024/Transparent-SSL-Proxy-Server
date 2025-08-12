@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSS Testing Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            font-weight: bold;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>XSS Testing Website</h1>
+    </header>
+    <div class="container">
+        <form id="xssForm">
+            <label for="inputText">Enter text for testing:</label><br>
+            <textarea id="inputText" name="inputText"></textarea><br>
+            <button type="button" onclick="postComment()">Post Comment</button>
+        </form>
+        <hr>
+        <h2>Test Results:</h2>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function postComment() {
+            var inputText = document.getElementById("inputText").value;
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/post_comment", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        // Clear the input field after posting the comment
+                        document.getElementById("inputText").value = "";
+                        // Refresh comments after posting
+                        fetchComments();
+                    } else {
+                        console.error("Error:", xhr.status);
+                    }
+                }
+            };
+            xhr.send(JSON.stringify({ inputText: inputText }));
+        }
+
+        function fetchComments() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/get_comments", true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        var comments = JSON.parse(xhr.responseText);
+                        var resultHtml = "";
+                        comments.forEach(function(comment) {
+                            resultHtml += "<p>" + comment.inputText + "</p>";
+                        });
+                        document.getElementById("result").innerHTML = resultHtml;
+                    } else {
+                        console.error("Error:", xhr.status);
+                    }
+                }
+            };
+            xhr.send();
+        }
+
+        // Fetch comments when the page loads
+        window.onload = fetchComments;
+    </script>
+</body>
+</html>
